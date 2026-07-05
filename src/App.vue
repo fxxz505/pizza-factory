@@ -15,6 +15,7 @@ import { startRandomEventLoop } from './composables/useRandomEvents.js'
 import { scheduleGoldenPizza } from './composables/useGoldenPizza.js'
 import { showToast, showConfirm } from './composables/useToast.js'
 import { installGlobalInteractionFeedback } from './composables/useFeedback.js'
+import { prestigePreview, performPrestige } from './composables/usePrestige.js'
 
 import StatusBar from './components/StatusBar.vue'
 import TabBar from './components/TabBar.vue'
@@ -29,6 +30,7 @@ import ConfirmModal from './components/ConfirmModal.vue'
 const activeTab = ref('factory')
 const factoryPanelRef = ref(null)
 const sheetOpen = ref(false)
+const prestige = computed(() => prestigePreview(state))
 
 const desktopNavTabs = [
   { key: 'factory', label: '工厂', icon: '🏭', always: true },
@@ -88,6 +90,25 @@ function onReset() {
     activeTab.value = 'factory'
     showToast('已重置', '一切归零，重新开始你的虚拟披萨帝国。')
   })
+}
+function onPrestige() {
+  const p = prestige.value
+  if (!p.ready) {
+    showToast('转生条件不足', `需要发现 ${p.requiredDiscoveries} 个唯一配方，并累计 ${p.requiredPoints} 个技能点。`)
+    return
+  }
+  showConfirm(
+    '启动转生重启',
+    `将重置本轮字节、产线、库存、图鉴和抽卡进度，保留技能树与永久技能点记录。下一轮基础产出加成提升至 +${p.nextBonusPct}%。`,
+    '确认转生',
+    () => {
+      const result = performPrestige(state)
+      if (!result) return
+      saveState()
+      activeTab.value = 'factory'
+      showToast('转生完成', `重启协议 Lv.${result.level} 已生效，下一轮产出加成 ${result.bonusText}。`, { life: 6000 })
+    }
+  )
 }
 
 let stopGameLoop, stopRandomEvents, stopGolden, stopInteractionFeedback
@@ -173,6 +194,9 @@ onBeforeUnmount(() => {
       <div class="footer-actions">
         <button class="muted-link" @click="openExport">导出存档</button>
         <button class="muted-link" @click="openImport">导入存档</button>
+        <button class="muted-link prestige" :class="{ ready: prestige.ready }" @click="onPrestige">
+          转生重启 Lv.{{ prestige.current }}
+        </button>
         <button class="muted-link danger" @click="onReset">重置全部数据</button>
       </div>
     </footer>

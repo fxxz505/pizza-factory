@@ -7,6 +7,8 @@ import { RARITIES } from '../data/rarities.js'
 import { RECIPE_SIG_MAP } from '../data/recipes.js'
 import { CRAFT_REWARD, FIRST_DISCOVERY_MULT, COLLECTION_BONUS, SLOT_UNLOCK_COST, MAX_SLOTS } from '../data/constants.js'
 import { cookingTimeForIngredients } from './utils/cookingTime.js'
+import { craftRewardResearchMult } from './useEconomy.js'
+import { awardSkillPointsForRecipe } from './usePrestige.js'
 import { triggerScreenShake } from './useFeedback.js'
 import { saveState } from './useGameState.js'
 import { showToast, showConfirm } from './useToast.js'
@@ -97,10 +99,13 @@ export function actuallyBake(state, onResult) {
 
   const rarityIdx = recipe.rarity
   const isNew = !state.dex[recipe.id]
-  const reward = CRAFT_REWARD[rarityIdx] * (isNew ? FIRST_DISCOVERY_MULT : 1)
+  const stars = RARITIES[rarityIdx].stars
+  const reward = Math.round(CRAFT_REWARD[rarityIdx] * (isNew ? FIRST_DISCOVERY_MULT : 1) * craftRewardResearchMult(state))
+  let skillPointGain = { gained: 0, total: state.totalSkillPointsEarned || 0, isFirstSkillPoint: false }
   if (isNew) {
     state.dex[recipe.id] = { ts: Date.now(), rarity: rarityIdx }
     state.collectionBonus += COLLECTION_BONUS[rarityIdx]
+    skillPointGain = awardSkillPointsForRecipe(state, recipe, stars)
   }
   const title = recipe.name + (isNew ? '（新配方发现！）' : '')
 
@@ -121,9 +126,11 @@ export function actuallyBake(state, onResult) {
   if (onResult) {
     onResult({
       recipe, filled, names, rarityIdx, isNew, reward, title,
+      skillPointGain: skillPointGain.gained,
+      totalSkillPointsEarned: skillPointGain.total,
       rarityColor: RARITIES[rarityIdx].color,
       rarityLabel: RARITIES[rarityIdx].label,
-      stars: RARITIES[rarityIdx].stars,
+      stars,
     })
   }
 }

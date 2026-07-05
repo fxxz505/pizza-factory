@@ -357,6 +357,70 @@ a{color:var(--cyan);}
 .gen-buy .cost{font-size:11px;}
 .gen-buy .own{font-size:9px; color:var(--muted);}
 
+.muted-link.prestige.ready{
+  color:var(--gold);
+  border-color:var(--gold);
+}
+
+.skill-tree-meta{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:8px;
+  margin-bottom:10px;
+}
+.skill-tree-meta div{
+  min-width:0;
+  background:var(--bg-panel-2);
+  border:2px solid var(--line);
+  padding:7px;
+}
+.skill-tree-meta span{
+  display:block;
+  color:var(--muted);
+  font-size:12px;
+  margin-bottom:2px;
+}
+.skill-tree-meta b{
+  color:var(--cyan);
+  font-family:'Press Start 2P', monospace;
+  font-size:8px;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+.skill-node{
+  position:relative;
+  transition:filter 120ms ease-out, transform 120ms ease-out;
+}
+.skill-node.ready{
+  border-color:rgba(255,210,63,0.75);
+}
+.skill-node.ready .research-icon{
+  border-color:var(--gold);
+  box-shadow:0 0 12px rgba(255,210,63,0.28);
+}
+.skill-node.locked{
+  opacity:0.48;
+}
+.skill-node.maxed .research-icon{
+  border-color:var(--cyan);
+}
+.skill-node.pulsing{
+  animation:skillPulse 520ms ease-out;
+}
+.research-req{
+  color:var(--danger);
+  font-size:12px;
+  margin-top:3px;
+}
+@keyframes skillPulse{
+  0%{transform:scale(1); filter:brightness(1);}
+  35%{transform:scale(1.035); filter:brightness(1.45);}
+  100%{transform:scale(1); filter:brightness(1);}
+}
+@media (prefers-reduced-motion: reduce){
+  .skill-node.pulsing{animation:none;}
+}
+
 /* ---------- rarity colors ---------- */
 .rarity-common{color:#b7c4d1;}
 .rarity-uncommon{color:#4ee08a;}
@@ -2480,6 +2544,12 @@ body.screen-shake-strong{animation:screenShakeStrong 340ms steps(2,end);}
     grid-template-columns:1fr;
     gap:0;
   }
+  .research-grid.skill-tree{
+    grid-template-columns:repeat(3, minmax(0,1fr));
+    grid-auto-rows:auto;
+    gap:10px;
+    align-items:stretch;
+  }
   .research-node{
     display:grid;
     grid-template-columns:36px minmax(0,1fr) 116px;
@@ -2489,9 +2559,28 @@ body.screen-shake-strong{animation:screenShakeStrong 340ms steps(2,end);}
     padding:8px 0;
     border-bottom:1px dashed var(--line);
   }
+  .skill-tree .research-node{
+    grid-column:var(--tree-col);
+    grid-row:var(--tree-row);
+    grid-template-columns:36px minmax(0,1fr);
+    grid-template-rows:auto auto;
+    min-height:150px;
+    padding:10px;
+    border:2px solid var(--line);
+    background:rgba(30,17,71,0.62);
+  }
+  .skill-tree .research-buy{
+    grid-column:1 / -1;
+    width:100%;
+    min-height:34px;
+    margin-top:4px;
+  }
   .research-node:last-child{
     border-bottom:0;
     padding-bottom:0;
+  }
+  .skill-tree .research-node:last-child{
+    padding-bottom:10px;
   }
   .research-icon{
     width:36px;

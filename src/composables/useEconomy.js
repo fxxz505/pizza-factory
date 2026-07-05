@@ -16,10 +16,25 @@ export const RESEARCH_DEFS = [
     icon: '👆',
     name: '脉冲手套',
     desc: '每级让点击收益提高 10%',
-    max: 8,
-    baseCost: 800,
-    growth: 2.25,
+    max: 5,
+    row: 1,
+    col: 1,
+    cost: 1,
+    req: null,
     effect: (lv) => `点击 x${(1 + lv * 0.1).toFixed(2)}`,
+  },
+  {
+    key: 'critSpark',
+    branch: '点击核心',
+    icon: '🎯',
+    name: '暴击火花',
+    desc: '每级让暴击率额外提高 1%',
+    max: 5,
+    row: 2,
+    col: 1,
+    cost: 2,
+    req: { key: 'clickCore', level: 2 },
+    effect: (lv) => `暴击 +${lv}%`,
   },
   {
     key: 'autoLine',
@@ -27,21 +42,12 @@ export const RESEARCH_DEFS = [
     icon: '⚙️',
     name: '流水线校准',
     desc: '每级让全部挂机产出提高 8%',
-    max: 8,
-    baseCost: 1200,
-    growth: 2.35,
+    max: 5,
+    row: 1,
+    col: 2,
+    cost: 1,
+    req: null,
     effect: (lv) => `挂机 x${(1 + lv * 0.08).toFixed(2)}`,
-  },
-  {
-    key: 'gachaTuning',
-    branch: '抽卡烹饪',
-    icon: '🎲',
-    name: '原料扫描仪',
-    desc: '每级降低抽卡成本 3%',
-    max: 6,
-    baseCost: 1800,
-    growth: 2.5,
-    effect: (lv) => `抽卡 -${Math.round(gachaDiscount(lv) * 100)}%`,
   },
   {
     key: 'offlineOven',
@@ -49,10 +55,55 @@ export const RESEARCH_DEFS = [
     icon: '🌙',
     name: '保温烤箱',
     desc: '每级让离线结算效率提高 5%',
-    max: 6,
-    baseCost: 2400,
-    growth: 2.6,
+    max: 5,
+    row: 2,
+    col: 2,
+    cost: 2,
+    req: { key: 'autoLine', level: 2 },
     effect: (lv) => `离线 +${lv * 5}%`,
+  },
+  {
+    key: 'gachaTuning',
+    branch: '抽卡烹饪',
+    icon: '🎲',
+    name: '原料扫描仪',
+    desc: '每级降低抽卡成本 3%',
+    max: 5,
+    row: 1,
+    col: 3,
+    cost: 1,
+    req: null,
+    effect: (lv) => `抽卡 -${Math.round(gachaDiscount(lv) * 100)}%`,
+  },
+  {
+    key: 'kitchenMaster',
+    branch: '抽卡烹饪',
+    icon: '🍕',
+    name: '主厨手册',
+    desc: '每级让烘焙奖励提高 10%',
+    max: 5,
+    row: 2,
+    col: 3,
+    cost: 2,
+    req: { key: 'gachaTuning', level: 2 },
+    effect: (lv) => `烘焙 x${(1 + lv * 0.1).toFixed(2)}`,
+  },
+  {
+    key: 'prestigeForge',
+    branch: '转生炉心',
+    icon: '🔥',
+    name: '重启协议',
+    desc: '每级让转生加成额外提高 3%',
+    max: 4,
+    row: 3,
+    col: 2,
+    cost: 3,
+    req: { any: [
+      { key: 'critSpark', level: 2 },
+      { key: 'offlineOven', level: 2 },
+      { key: 'kitchenMaster', level: 2 },
+    ] },
+    effect: (lv) => `转生 +${lv * 3}%`,
   },
 ]
 
@@ -60,22 +111,53 @@ export function researchLevel(state, key) {
   return Math.max(0, Math.floor((state.research && state.research[key]) || 0))
 }
 export function researchCost(state, def) {
-  return Math.floor(def.baseCost * Math.pow(def.growth, researchLevel(state, def.key)))
+  const lv = researchLevel(state, def.key)
+  return typeof def.cost === 'function' ? def.cost(lv) : def.cost
+}
+export function researchUnlocked(state, def) {
+  if (!def.req) return true
+  if (def.req.any) return def.req.any.some(req => researchLevel(state, req.key) >= req.level)
+  return researchLevel(state, def.req.key) >= def.req.level
+}
+export function availableSkillPoints(state) {
+  return Math.max(0, Math.floor(state.skillPoints || 0))
+}
+export function canBuyResearch(state, def) {
+  return researchUnlocked(state, def) &&
+    researchLevel(state, def.key) < def.max &&
+    availableSkillPoints(state) >= researchCost(state, def)
+}
+export function totalSpentSkillPoints(state) {
+  return RESEARCH_DEFS.reduce((sum, def) => {
+    const lv = researchLevel(state, def.key)
+    let spent = 0
+    for (let i = 0; i < lv; i++) {
+      spent += typeof def.cost === 'function' ? def.cost(i) : def.cost
+    }
+    return sum + spent
+  }, 0)
 }
 export function gachaDiscount(lv) {
-  return Math.min(0.18, lv * 0.03)
+  return Math.min(0.15, lv * 0.03)
+}
+export function prestigeMult(state) {
+  const base = 1 + Math.max(0, Math.floor(state.prestigeLevel || 0)) * 0.08
+  return base + researchLevel(state, 'prestigeForge') * 0.03
 }
 export function clickResearchMult(state) {
-  return 1 + researchLevel(state, 'clickCore') * 0.1
+  return (1 + researchLevel(state, 'clickCore') * 0.1) * prestigeMult(state)
 }
 export function generatorResearchMult(state) {
-  return 1 + researchLevel(state, 'autoLine') * 0.08
+  return (1 + researchLevel(state, 'autoLine') * 0.08) * prestigeMult(state)
 }
 export function offlineResearchMult(state) {
   return 1 + researchLevel(state, 'offlineOven') * 0.05
 }
 export function gachaResearchMult(state) {
   return 1 - gachaDiscount(researchLevel(state, 'gachaTuning'))
+}
+export function craftRewardResearchMult(state) {
+  return 1 + researchLevel(state, 'kitchenMaster') * 0.1
 }
 
 export function clickPower(state) {
@@ -87,7 +169,7 @@ export function clickUpgradeCost(state) {
   return Math.floor(CLICK_UPGRADE_BASE_COST * Math.pow(CLICK_UPGRADE_GROWTH, state.clickLevel - 1))
 }
 export function critChance(state) {
-  return Math.min(CRIT_CHANCE_CAP, CRIT_CHANCE_BASE + CRIT_CHANCE_PER_LV * state.critChanceLv)
+  return Math.min(CRIT_CHANCE_CAP, CRIT_CHANCE_BASE + CRIT_CHANCE_PER_LV * state.critChanceLv + researchLevel(state, 'critSpark') * 0.01)
 }
 export function critMultiplier(state) {
   return CRIT_MULT_BASE + CRIT_MULT_PER_LV * state.critMultLv

@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node scripts/test-cooking-duration.js && node scripts/test-gacha.js"
+    "test": "node scripts/test-cooking-duration.js && node scripts/test-gacha.js && node scripts/test-skill-prestige.js"
   },
   "dependencies": {
     "vue": "^3.5.39"

@@ -6,7 +6,8 @@ import { saveState } from '../composables/useGameState.js'
 import {
   clickPower, clickUpgradeCost, critChance, critMultiplier, critChanceCost, critMultCost,
   genCost, fmt, fmtRate, bytesPerSecond,
-  RESEARCH_DEFS, researchCost, researchLevel,
+  RESEARCH_DEFS, researchCost, researchLevel, researchUnlocked, canBuyResearch,
+  availableSkillPoints, totalSpentSkillPoints, prestigeMult,
 } from '../composables/useEconomy.js'
 import { CRIT_CHANCE_CAP } from '../data/constants.js'
 import { GEN_DEFS } from '../data/genDefs.js'
@@ -16,8 +17,9 @@ import { drawPizza } from '../composables/utils/pixelArt.js'
 import { ensureAudio, sfxClick, sfxCrit, sfxBuy, haptic } from '../composables/useAudio.js'
 import { checkUnlocks } from '../composables/useUnlocks.js'
 import { checkAchievements } from '../composables/useAchievements.js'
-import { tickClock } from '../composables/useTick.js'
 import { goldenPizzaState, catchGoldenPizza } from '../composables/useGoldenPizza.js'
+import { prestigePreview } from '../composables/usePrestige.js'
+import { showToast } from '../composables/useToast.js'
 import PizzaCanvas from './PizzaCanvas.vue'
 
 const stageEl = ref(null)
@@ -28,6 +30,7 @@ const goldenCanvas = ref(null)
 
 const stageShakeClass = ref('')
 const punchClass = ref(false)
+const skillPulseKey = ref('')
 
 let currentClickIngKeys = ['pepperoni', 'mushroom']
 
@@ -149,6 +152,9 @@ const ccMaxed = computed(() => critChance(state) >= CRIT_CHANCE_CAP)
 const cmCost = computed(() => critMultCost(state))
 const bps = computed(() => bytesPerSecond(state))
 const researchDefs = RESEARCH_DEFS
+const skillPoints = computed(() => availableSkillPoints(state))
+const spentSkillPoints = computed(() => totalSpentSkillPoints(state))
+const prestige = computed(() => prestigePreview(state))
 const ownedGeneratorCount = computed(() => GEN_DEFS.reduce((sum, def) => sum + (state.gens[def.key] || 0), 0))
 const nextGenerator = computed(() => GEN_DEFS.find((def, idx) => state.bytes < genCost(state, idx)) || GEN_DEFS[GEN_DEFS.length - 1])
 const nextGeneratorCost = computed(() => {
@@ -194,11 +200,22 @@ function buyResearch(def) {
   const lv = researchLevel(state, def.key)
   if (lv >= def.max) return
   const cost = researchCost(state, def)
-  if (state.bytes < cost) return
-  state.bytes -= cost
+  if (!researchUnlocked(state, def)) {
+    showToast('技能未解锁', '先点亮前置技能，再研究这个节点。')
+    return
+  }
+  if (state.skillPoints < cost) {
+    showToast('技能点不足', '首次烘焙新披萨会按星级获得技能点。')
+    return
+  }
+  state.skillPoints -= cost
   state.research ||= {}
   state.research[def.key] = lv + 1
+  skillPulseKey.value = ''
+  requestAnimationFrame(() => { skillPulseKey.value = def.key })
   sfxBuy()
+  haptic([8, 18, 8])
+  showToast('技能升级', def.name + ' 提升至 Lv.' + (lv + 1))
   checkAchievements(state)
   saveState()
 }
@@ -347,7 +364,7 @@ defineExpose({ getStageSize: () => ({ width: stageEl.value?.clientWidth || 0, he
           <div class="factory-metric"><span>实时产出</span><b>{{ fmtRate(bps) }}/秒</b></div>
           <div class="factory-metric"><span>点击功率</span><b>{{ fmt(clickPower(state)) }}</b></div>
           <div class="factory-metric"><span>产线节点</span><b>{{ ownedGeneratorCount }}</b></div>
-          <div class="factory-metric"><span>暴击倍率</span><b>x{{ critMultiplier(state).toFixed(1) }}</b></div>
+          <div class="factory-metric"><span>转生加成</span><b>x{{ prestigeMult(state).toFixed(2) }}</b></div>
         </div>
         <div class="factory-load">
           <div class="factory-load-head"><span>披萨核心负载</span><b>{{ factoryLoadPct }}%</b></div>
@@ -364,23 +381,43 @@ defineExpose({ getStageSize: () => ({ width: stageEl.value?.clientWidth || 0, he
       </div>
 
       <div class="card factory-research-card">
-        <h2><span class="dot"></span>技能研究</h2>
-        <div class="research-grid">
-          <div class="research-node" v-for="def in researchDefs" :key="def.key">
+        <h2><span class="dot"></span>技能树 <span class="sidenote">可用 {{ skillPoints }} 点 / 已投入 {{ spentSkillPoints }} 点</span></h2>
+        <div class="skill-tree-meta">
+          <div><span>转生等级</span><b>{{ prestige.current }}</b></div>
+          <div><span>下一次重启</span><b>{{ prestige.discoveries }}/{{ prestige.requiredDiscoveries }} 配方</b></div>
+          <div><span>永久图鉴点</span><b>{{ prestige.points }}/{{ prestige.requiredPoints }}</b></div>
+        </div>
+        <div class="research-grid skill-tree">
+          <div
+            class="research-node skill-node"
+            v-for="def in researchDefs"
+            :key="def.key"
+            :class="{
+              locked: !researchUnlocked(state, def),
+              ready: canBuyResearch(state, def),
+              pulsing: skillPulseKey === def.key,
+              maxed: researchLevel(state, def.key) >= def.max
+            }"
+            :style="{ '--tree-row': def.row, '--tree-col': def.col }"
+            @animationend="skillPulseKey === def.key && (skillPulseKey = '')"
+          >
             <div class="research-icon">{{ def.icon }}</div>
             <div class="research-info">
               <div class="research-branch">{{ def.branch }}</div>
               <div class="name">{{ def.name }} Lv.{{ researchLevel(state, def.key) }}/{{ def.max }}</div>
               <div class="sub">{{ def.desc }}</div>
               <div class="research-effect">{{ def.effect(researchLevel(state, def.key)) }}</div>
+              <div v-if="!researchUnlocked(state, def)" class="research-req">
+                需要前置技能
+              </div>
             </div>
             <button
               class="gen-buy research-buy"
-              :disabled="researchLevel(state, def.key) >= def.max || state.bytes < researchCost(state, def)"
+              :disabled="!canBuyResearch(state, def)"
               @click="buyResearch(def)"
             >
               <span>{{ researchLevel(state, def.key) >= def.max ? '满级' : '研究' }}</span>
-              <span class="cost">{{ researchLevel(state, def.key) >= def.max ? 'MAX' : fmt(researchCost(state, def)) }}</span>
+              <span class="cost">{{ researchLevel(state, def.key) >= def.max ? 'MAX' : researchCost(state, def) + ' 点' }}</span>
             </button>
           </div>
         </div>

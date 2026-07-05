@@ -131,6 +131,8 @@ const detailText = computed(() => {
     const pct = Math.round((r.rarityIdx >= 0 ? [0.01, 0.02, 0.04, 0.08, 0.15][r.rarityIdx] : 0) * 100)
     d += '（首次发现 ×2.5，产量永久 +' + pct + '%）'
   }
+  if (r.skillPointGain > 0) d += ' ｜ 技能点 +' + r.skillPointGain
+  else if (!r.isNew) d += ' ｜ 重复配方不增加技能点'
   return d
 })
 </script>

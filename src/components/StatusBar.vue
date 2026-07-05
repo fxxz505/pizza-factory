@@ -1,7 +1,10 @@
 <script setup>
 import { computed } from 'vue'
 import { state } from '../composables/useGameState.js'
-import { bytesPerSecond, clickUpgradeCost, gachaSingleCostForState, genCost, fmt, fmtRate, pad2 } from '../composables/useEconomy.js'
+import {
+  RESEARCH_DEFS, availableSkillPoints, bytesPerSecond, canBuyResearch,
+  clickUpgradeCost, gachaSingleCostForState, genCost, fmt, fmtRate, pad2,
+} from '../composables/useEconomy.js'
 import { audioUI, cycleVolume } from '../composables/useAudio.js'
 import { tickClock } from '../composables/useTick.js'
 import { GEN_DEFS } from '../data/genDefs.js'
@@ -11,6 +14,13 @@ const bps = computed(() => bytesPerSecond(state))
 const bpsText = computed(() => fmtRate(bps.value))
 
 const nextTarget = computed(() => {
+  if (availableSkillPoints(state) > 0) {
+    const readySkills = RESEARCH_DEFS.filter(def => canBuyResearch(state, def)).map(def => def.name)
+    if (readySkills.length) {
+      return '下一目标：可点技能 ' + readySkills.slice(0, 2).join(' / ') + '（' + availableSkillPoints(state) + ' 点）'
+    }
+    return '下一目标：技能树有 ' + availableSkillPoints(state) + ' 个技能点，查看前置节点'
+  }
   if (!state.unlocked.gacha) {
     const remain = Math.max(0, 5 - state.stats.totalClicks)
     return remain > 0 ? '下一目标：再点击 ' + remain + ' 次解锁抽卡' : '下一目标：抽卡已可解锁'
