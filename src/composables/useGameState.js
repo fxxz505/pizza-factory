@@ -40,8 +40,8 @@ export function defaultState() {
     dex: {},
     hints: {},
     achDone: {},
-    unlocked: { gacha: false, kitchen: false, dex: false },
-    seenNew: { gacha: false, kitchen: false, dex: false },
+    unlocked: { gacha: false, kitchen: false, dex: false, skills: true },
+    seenNew: { gacha: false, kitchen: false, dex: false, skills: true },
     uiAchOpen: false,
     stats: {
       totalClicks: 0, totalEarned: 0, ingredientPulls: 0, legendaryIngPulls: 0,

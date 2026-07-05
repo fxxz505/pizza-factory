@@ -23,11 +23,19 @@ import FactoryPanel from './components/FactoryPanel.vue'
 import GachaPanel from './components/GachaPanel.vue'
 import KitchenPanel from './components/KitchenPanel.vue'
 import DexPanel from './components/DexPanel.vue'
+import SkillTreePanel from './components/SkillTreePanel.vue'
 import RecipeBookSheet from './components/RecipeBookSheet.vue'
 import ToastContainer from './components/ToastContainer.vue'
 import ConfirmModal from './components/ConfirmModal.vue'
 
-const activeTab = ref('factory')
+const VALID_TABS = new Set(['factory', 'gacha', 'kitchen', 'skills', 'dex'])
+function initialTab() {
+  if (typeof window === 'undefined') return 'factory'
+  const target = new URLSearchParams(window.location.search).get('tab')
+  return VALID_TABS.has(target) ? target : 'factory'
+}
+
+const activeTab = ref(initialTab())
 const factoryPanelRef = ref(null)
 const sheetOpen = ref(false)
 const prestige = computed(() => prestigePreview(state))
@@ -36,6 +44,7 @@ const desktopNavTabs = [
   { key: 'factory', label: '工厂', icon: '🏭', always: true },
   { key: 'gacha', label: '抽卡', icon: '🎲' },
   { key: 'kitchen', label: '厨房', icon: '🍕' },
+  { key: 'skills', label: '技能', icon: '🌟', always: true },
   { key: 'dex', label: '图鉴', icon: '📖' },
 ]
 const visibleDesktopTabs = computed(() => desktopNavTabs.filter(t => t.always || state.unlocked[t.key]))
@@ -178,7 +187,7 @@ onBeforeUnmount(() => {
 
     <div class="grid-desktop desktop-module-grid" :class="'desktop-active-' + activeTab">
       <div class="dashboard-column dashboard-factory" :class="{ activeColumn: activeTab === 'factory' }">
-        <FactoryPanel ref="factoryPanelRef" :class="{ active: activeTab === 'factory' }" />
+        <FactoryPanel ref="factoryPanelRef" :class="{ active: activeTab === 'factory' }" @switch-tab="switchTab" />
       </div>
       <div class="dashboard-column dashboard-side" :class="{ activeColumn: activeTab === 'gacha' || activeTab === 'kitchen' }">
         <GachaPanel :class="{ active: activeTab === 'gacha' }" @switch-tab="switchTab" />
@@ -186,6 +195,9 @@ onBeforeUnmount(() => {
       </div>
       <div class="dashboard-column dashboard-dex" :class="{ activeColumn: activeTab === 'dex' }">
         <DexPanel :class="{ active: activeTab === 'dex' }" />
+      </div>
+      <div class="dashboard-column dashboard-skills" :class="{ activeColumn: activeTab === 'skills' }">
+        <SkillTreePanel :class="{ active: activeTab === 'skills' }" />
       </div>
     </div>
 

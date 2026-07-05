@@ -12,6 +12,7 @@ const TAB_DEFS = [
   { key: 'factory', label: '工厂', icon: '🏭', always: true },
   { key: 'gacha', label: '抽卡', icon: '🎲' },
   { key: 'kitchen', label: '厨房', icon: '🍳' },
+  { key: 'skills', label: '技能', icon: '🌟', always: true },
   { key: 'dex', label: '图鉴', icon: '📖' },
 ]
 

@@ -1,8 +1,8 @@
 // 抽卡逻辑：weightedIndex/pullOne/单抽/十连（含保底、十连稀有度保证、抽卡历史与新食材标记）。
-import { INGREDIENT_WEIGHTS, PITY_THRESHOLD } from '../data/constants.js'
+import { INGREDIENT_WEIGHTS } from '../data/constants.js'
 import { ING_BY_TIER } from '../data/ingredients.js'
 import { RARITIES } from '../data/rarities.js'
-import { gachaSingleCostForState, gacha10Cost, fmt } from './useEconomy.js'
+import { gachaSingleCostForState, gacha10Cost, fmt, gachaPityThreshold, gachaRareBoost } from './useEconomy.js'
 import { saveState } from './useGameState.js'
 import { showToast } from './useToast.js'
 import { ensureAudio, sfxError } from './useAudio.js'
@@ -17,6 +17,11 @@ export function weightedIndex(weights, roll) {
   let acc = 0
   for (let i = 0; i < weights.length; i++) { acc += weights[i] / total; if (roll < acc) return i }
   return weights.length - 1
+}
+
+function tunedIngredientWeights(state) {
+  const boost = gachaRareBoost(state)
+  return INGREDIENT_WEIGHTS.map((weight, idx) => idx >= 2 ? weight * boost : weight)
 }
 
 function ensureGachaState(state) {
@@ -48,8 +53,8 @@ function decoratePull(state, ing, tierIdx, guaranteed = false) {
 export function pullOne(state, options = {}) {
   ensureGachaState(state)
   let forceMin
-  if (state.stats.pullsSinceEpic >= PITY_THRESHOLD) forceMin = 3
-  let tierIdx = weightedIndex(INGREDIENT_WEIGHTS, Math.random())
+  if (state.stats.pullsSinceEpic >= gachaPityThreshold(state)) forceMin = 3
+  let tierIdx = weightedIndex(tunedIngredientWeights(state), Math.random())
   if (forceMin !== undefined && tierIdx < forceMin) tierIdx = forceMin
   const pool = ING_BY_TIER[tierIdx]
   const ing = pool[Math.floor(Math.random() * pool.length)]

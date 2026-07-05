@@ -6,7 +6,7 @@ import { saveState } from '../composables/useGameState.js'
 import {
   clickPower, clickUpgradeCost, critChance, critMultiplier, critChanceCost, critMultCost,
   genCost, fmt, fmtRate, bytesPerSecond,
-  RESEARCH_DEFS, researchCost, researchLevel, researchUnlocked, canBuyResearch,
+  RESEARCH_DEFS, canBuyResearch,
   availableSkillPoints, totalSpentSkillPoints, prestigeMult,
 } from '../composables/useEconomy.js'
 import { CRIT_CHANCE_CAP } from '../data/constants.js'
@@ -19,8 +19,9 @@ import { checkUnlocks } from '../composables/useUnlocks.js'
 import { checkAchievements } from '../composables/useAchievements.js'
 import { goldenPizzaState, catchGoldenPizza } from '../composables/useGoldenPizza.js'
 import { prestigePreview } from '../composables/usePrestige.js'
-import { showToast } from '../composables/useToast.js'
 import PizzaCanvas from './PizzaCanvas.vue'
+
+const emit = defineEmits(['switch-tab'])
 
 const stageEl = ref(null)
 const clickCanvas = ref(null)
@@ -30,7 +31,6 @@ const goldenCanvas = ref(null)
 
 const stageShakeClass = ref('')
 const punchClass = ref(false)
-const skillPulseKey = ref('')
 
 let currentClickIngKeys = ['pepperoni', 'mushroom']
 
@@ -155,6 +155,7 @@ const researchDefs = RESEARCH_DEFS
 const skillPoints = computed(() => availableSkillPoints(state))
 const spentSkillPoints = computed(() => totalSpentSkillPoints(state))
 const prestige = computed(() => prestigePreview(state))
+const readyResearch = computed(() => researchDefs.filter(def => canBuyResearch(state, def)))
 const ownedGeneratorCount = computed(() => GEN_DEFS.reduce((sum, def) => sum + (state.gens[def.key] || 0), 0))
 const nextGenerator = computed(() => GEN_DEFS.find((def, idx) => state.bytes < genCost(state, idx)) || GEN_DEFS[GEN_DEFS.length - 1])
 const nextGeneratorCost = computed(() => {
@@ -194,29 +195,6 @@ function buyCritMult() {
   state.bytes -= cost
   state.critMultLv++
   sfxBuy()
-  saveState()
-}
-function buyResearch(def) {
-  const lv = researchLevel(state, def.key)
-  if (lv >= def.max) return
-  const cost = researchCost(state, def)
-  if (!researchUnlocked(state, def)) {
-    showToast('技能未解锁', '先点亮前置技能，再研究这个节点。')
-    return
-  }
-  if (state.skillPoints < cost) {
-    showToast('技能点不足', '首次烘焙新披萨会按星级获得技能点。')
-    return
-  }
-  state.skillPoints -= cost
-  state.research ||= {}
-  state.research[def.key] = lv + 1
-  skillPulseKey.value = ''
-  requestAnimationFrame(() => { skillPulseKey.value = def.key })
-  sfxBuy()
-  haptic([8, 18, 8])
-  showToast('技能升级', def.name + ' 提升至 Lv.' + (lv + 1))
-  checkAchievements(state)
   saveState()
 }
 function buyGenerator(idx) {
@@ -381,45 +359,24 @@ defineExpose({ getStageSize: () => ({ width: stageEl.value?.clientWidth || 0, he
       </div>
 
       <div class="card factory-research-card">
-        <h2><span class="dot"></span>技能树 <span class="sidenote">可用 {{ skillPoints }} 点 / 已投入 {{ spentSkillPoints }} 点</span></h2>
+        <h2><span class="dot"></span>技能控制台 <span class="sidenote">可用 {{ skillPoints }} 点 / 已投入 {{ spentSkillPoints }} 点</span></h2>
         <div class="skill-tree-meta">
           <div><span>转生等级</span><b>{{ prestige.current }}</b></div>
           <div><span>下一次重启</span><b>{{ prestige.discoveries }}/{{ prestige.requiredDiscoveries }} 配方</b></div>
           <div><span>永久图鉴点</span><b>{{ prestige.points }}/{{ prestige.requiredPoints }}</b></div>
         </div>
-        <div class="research-grid skill-tree">
-          <div
-            class="research-node skill-node"
-            v-for="def in researchDefs"
-            :key="def.key"
-            :class="{
-              locked: !researchUnlocked(state, def),
-              ready: canBuyResearch(state, def),
-              pulsing: skillPulseKey === def.key,
-              maxed: researchLevel(state, def.key) >= def.max
-            }"
-            :style="{ '--tree-row': def.row, '--tree-col': def.col }"
-            @animationend="skillPulseKey === def.key && (skillPulseKey = '')"
-          >
-            <div class="research-icon">{{ def.icon }}</div>
-            <div class="research-info">
-              <div class="research-branch">{{ def.branch }}</div>
-              <div class="name">{{ def.name }} Lv.{{ researchLevel(state, def.key) }}/{{ def.max }}</div>
-              <div class="sub">{{ def.desc }}</div>
-              <div class="research-effect">{{ def.effect(researchLevel(state, def.key)) }}</div>
-              <div v-if="!researchUnlocked(state, def)" class="research-req">
-                需要前置技能
-              </div>
-            </div>
-            <button
-              class="gen-buy research-buy"
-              :disabled="!canBuyResearch(state, def)"
-              @click="buyResearch(def)"
-            >
-              <span>{{ researchLevel(state, def.key) >= def.max ? '满级' : '研究' }}</span>
-              <span class="cost">{{ researchLevel(state, def.key) >= def.max ? 'MAX' : researchCost(state, def) + ' 点' }}</span>
-            </button>
+        <div class="factory-skill-console">
+          <div class="factory-skill-radar">
+            <span v-for="n in 12" :key="n"></span>
           </div>
+          <div class="factory-skill-copy">
+            <b>{{ readyResearch.length ? readyResearch.length + ' 个技能可升级' : '等待新技能点' }}</b>
+            <p v-if="readyResearch.length">{{ readyResearch.slice(0, 3).map(def => def.name).join(' / ') }}</p>
+            <p v-else>首次烘焙新披萨会按星级发放技能点，重复配方不会重复加点。</p>
+          </div>
+          <button class="btn secondary small" type="button" @click="emit('switch-tab', 'skills')">
+            打开技能树
+          </button>
         </div>
       </div>
     </div>

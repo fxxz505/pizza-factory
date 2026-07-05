@@ -83,6 +83,13 @@ export function sfxCrit() {
 export function sfxPlace() { beep(420, 0.05, 'square', 0.05); setTimeout(() => beep(560, 0.05, 'square', 0.045), 35) }
 export function sfxRemove() { beep(340, 0.06, 'triangle', 0.045) }
 export function sfxBuy() { beep(300, 0.05, 'square', 0.06); setTimeout(() => beep(500, 0.08, 'square', 0.06), 50) }
+export function sfxSkillUpgrade(tier = 1) {
+  const lift = Math.max(0, Math.min(5, tier)) * 42
+  beep(260 + lift, 0.055, 'square', 0.065)
+  setTimeout(() => beep(390 + lift, 0.07, 'square', 0.07), 45)
+  setTimeout(() => beep(620 + lift, 0.09, 'triangle', 0.075), 105)
+  setTimeout(() => beep(880 + lift, 0.12, 'sine', 0.05), 180)
+}
 export function sfxCookStart() { beep(220, 0.08, 'triangle', 0.05); setTimeout(() => beep(360, 0.12, 'triangle', 0.055), 70) }
 export function sfxCookDone() { beep(520, 0.06, 'square', 0.06); setTimeout(() => beep(780, 0.12, 'triangle', 0.07), 80) }
 export function sfxTier(tierIdx) {

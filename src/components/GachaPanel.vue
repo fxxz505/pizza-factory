@@ -2,8 +2,7 @@
 // 抽卡面板：单抽/十连、保底提示、短揭晓节奏、抽取结果总结和最近记录。
 import { ref, computed } from 'vue'
 import { state } from '../composables/useGameState.js'
-import { gachaSingleCostForState, gacha10Cost, fmt } from '../composables/useEconomy.js'
-import { PITY_THRESHOLD } from '../data/constants.js'
+import { gachaSingleCostForState, gacha10Cost, fmt, gachaPityThreshold, gachaRareBoost } from '../composables/useEconomy.js'
 import { RARITIES } from '../data/rarities.js'
 import { INGREDIENT_WEIGHTS } from '../data/constants.js'
 import { doSinglePull, doTenPull } from '../composables/useGacha.js'
@@ -22,11 +21,15 @@ const revealSummary = ref(null)
 const c1 = computed(() => gachaSingleCostForState(state))
 const c10 = computed(() => gacha10Cost(state))
 const shortfall = computed(() => state.bytes < c1.value ? ('还差 ' + fmt(c1.value - state.bytes) + ' 字节可单抽') : '')
-const pityLeft = computed(() => Math.max(0, PITY_THRESHOLD - state.stats.pullsSinceEpic))
-const pityPct = computed(() => Math.min(100, state.stats.pullsSinceEpic / PITY_THRESHOLD * 100))
+const pityThreshold = computed(() => gachaPityThreshold(state))
+const pityLeft = computed(() => Math.max(0, pityThreshold.value - state.stats.pullsSinceEpic))
+const pityPct = computed(() => Math.min(100, state.stats.pullsSinceEpic / pityThreshold.value * 100))
 const bestTierLabel = computed(() => state.stats.bestPullTier >= 0 ? RARITIES[state.stats.bestPullTier].label : '暂无')
 const totalSpentText = computed(() => fmt(state.stats.gachaSpent || 0))
-const weightText = computed(() => RARITIES.map((r, i) => r.label + ' ' + INGREDIENT_WEIGHTS[i] + '%').join(' · '))
+const weightText = computed(() => RARITIES.map((r, i) => {
+  const weight = i >= 2 ? Math.round(INGREDIENT_WEIGHTS[i] * gachaRareBoost(state)) : INGREDIENT_WEIGHTS[i]
+  return r.label + ' ' + weight + '%'
+}).join(' · '))
 const canGoKitchen = computed(() => state.unlocked.kitchen && Object.values(state.inventory).some(count => count > 0))
 
 const revealVisible = ref(false)
@@ -108,7 +111,7 @@ function onTen() {
           </div>
           <p class="gacha-copy">消耗字节抽取披萨原料。新食材会被标记并保存，十连至少包含一份稀有级以上原料。</p>
           <div class="pity-wrap enhanced">
-            <div class="pity-label"><span>史诗保底进度</span><span>{{ state.stats.pullsSinceEpic }} / {{ PITY_THRESHOLD }}</span></div>
+            <div class="pity-label"><span>史诗保底进度</span><span>{{ state.stats.pullsSinceEpic }} / {{ pityThreshold }}</span></div>
             <div class="pity-track"><div class="pity-fill" :style="{ width: pityPct + '%' }"></div></div>
             <div class="pity-hint">{{ pityLeft === 0 ? '下一抽将触发史诗保底' : '距离史诗保底还差 ' + pityLeft + ' 抽' }}</div>
           </div>

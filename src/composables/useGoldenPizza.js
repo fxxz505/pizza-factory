@@ -1,7 +1,7 @@
 // 金色披萨限时事件：25-50s 随机间隔生成，工厂可见时直接在舞台上出现，
 // 否则弹出可点击 toast 跳转到工厂并生成。4.2s 内未点击则自动消失。
 import { reactive } from 'vue'
-import { clickPower } from './useEconomy.js'
+import { clickPower, goldenRewardResearchMult } from './useEconomy.js'
 import { fmt } from './useEconomy.js'
 import { pullOne } from './useGacha.js'
 import { saveState } from './useGameState.js'
@@ -42,7 +42,7 @@ export function catchGoldenPizza(state) {
   if (goldenPizzaState.caught || !goldenPizzaState.visible) return
   goldenPizzaState.caught = true
   ensureAudio()
-  const bonus = Math.max(50, clickPower(state) * 15)
+  const bonus = Math.round(Math.max(50, clickPower(state) * 15) * goldenRewardResearchMult(state))
   state.bytes += bonus
   state.stats.totalEarned += Math.max(0, bonus)
   state.stats.goldenCaught++
