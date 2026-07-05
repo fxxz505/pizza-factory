@@ -1,0 +1,73 @@
+// 20 种原料，含 8x8 像素精灵数据（pal 调色板 + px 逐行字符网格）。
+// 与原版逐字节保持一致，tier 0~4 对应 RARITIES 索引。
+export const INGREDIENTS = [
+  { key: 'pepperoni', name: '辣香肠', color: '#b8213f', tier: 0,
+    pal: { R: '#c23a4d', r: '#7e1f31' },
+    px: ['..RRRR..', '.RRrRRR.', 'RRRRRrRR', 'RrRRRRRR', 'RRRRrRRR', 'RRrRRRrR', '.RRRRRR.', '..RRRR..'] },
+  { key: 'mushroom', name: '蘑菇', color: '#c9b896', tier: 0,
+    pal: { M: '#a97c50', w: '#e8dcc8', S: '#e0d4b8' },
+    px: ['..MMMM..', '.MMwMMM.', 'MMMMMMwM', 'MwMMMMMM', '..SSSS..', '..SSSS..', '..SSSS..', '...SS...'] },
+  { key: 'greenpepper', name: '青椒', color: '#3fae4e', tier: 0,
+    pal: { G: '#2f8f3e', g: '#55c96a' },
+    px: ['..GGGG..', '.GggggG.', 'GGg..gGG', 'Gg....gG', 'Gg....gG', 'GGg..gGG', '.GggggG.', '..GGGG..'] },
+  { key: 'onion', name: '洋葱', color: '#d9c9e0', tier: 0,
+    pal: { O: '#e8dff0', p: '#a678c0' },
+    px: ['..OOOO..', '.OppppO.', 'Op.OO.pO', 'OpO..OpO', 'OpO..OpO', 'Op.OO.pO', '.OppppO.', '..OOOO..'] },
+
+  { key: 'olive', name: '橄榄', color: '#2c2440', tier: 1,
+    pal: { K: '#3a3050', r: '#c23a4d' },
+    px: ['........', '..KKKK..', '.KKKKKK.', 'KKKKKKKK', 'KKKrrKKK', '.KKKKKK.', '..KKKK..', '........'] },
+  { key: 'bacon', name: '培根', color: '#d97a4f', tier: 1,
+    pal: { B: '#c05a3a', p: '#e8b090' },
+    px: ['........', 'BBBBBBBB', 'BppBppBB', 'BBBBBBBB', 'BppBppBB', 'BBBBBBBB', '........', '........'] },
+  { key: 'corn', name: '玉米粒', color: '#e8d23f', tier: 1,
+    pal: { Y: '#e8c832', y: '#c9a516' },
+    px: ['........', '.YYYYYY.', '.YyYyYy.', '.YYYYYY.', '.YyYyYy.', '.YYYYYY.', '........', '........'] },
+  { key: 'ham', name: '火腿', color: '#e8a0a8', tier: 1,
+    pal: { H: '#e89aa6', h: '#f5c9d1' },
+    px: ['..HHHH..', '.HHHHHH.', 'HHHhhHHH', 'HHhHHhHH', 'HHhHHhHH', 'HHHhhHHH', '.HHHHHH.', '..HHHH..'] },
+
+  { key: 'basil', name: '罗勒', color: '#3f8f4e', tier: 2,
+    pal: { G: '#2f8f3e', g: '#6fce7f' },
+    px: ['....G...', '...GGG..', '..GGgGG.', '.GGgGGG.', 'GGgGGGG.', 'GgGGGG..', 'GGGG....', '.G......'] },
+  { key: 'pineapple', name: '菠萝', color: '#f2d94e', tier: 2,
+    pal: { Y: '#f2d94e', x: '#c9a516' },
+    px: ['Y.......', 'YY......', 'YxY.....', 'YYxY....', 'YxYxY...', 'YYYYxY..', 'YxYYYYY.', 'YYYYYYYY'] },
+  { key: 'garlic', name: '蒜片', color: '#f2eecb', tier: 2,
+    pal: { W: '#f2eecb', w: '#d8d0a0' },
+    px: ['...ww...', '..wWWw..', '.wWWWWw.', '.WWWWWW.', '.WWwwWW.', '.WWWWWW.', '..WWWW..', '...WW...'] },
+  { key: 'shrimp', name: '虾仁', color: '#f28b6b', tier: 2,
+    pal: { S: '#f28b6b', s: '#d95f3f' },
+    px: ['..SSSS..', '.SSSSSS.', 'SSs..sSS', 'SS....SS', 'SS......', 'SSs.....', '.SSSS.s.', '..SSSSS.'] },
+
+  { key: 'truffle', name: '松露', color: '#4a3a5c', tier: 3,
+    pal: { K: '#4a3a5c', k: '#6b5a80' },
+    px: ['..KKKK..', '.KKkKKK.', 'KKKKKkKK', 'KkKKKKKK', 'KKKkKKkK', 'KKKKKKKK', '.KkKKKK.', '..KKKK..'] },
+  { key: 'anchovy', name: '凤尾鱼', color: '#6b7fa0', tier: 3,
+    pal: { A: '#6b7fa0', s: '#c9d8ec' },
+    px: ['........', 'AA......', 'AAAA..A.', 'sAAAAAA.', 'AAAA..A.', 'AA......', '........', '........'] },
+  { key: 'chili', name: '魔鬼辣椒', color: '#d9272c', tier: 3,
+    pal: { R: '#d9272c', g: '#3fae4e' },
+    px: ['.....gg.', '....gg..', '...RR...', '..RRR...', '.RRRR...', '.RRR....', 'RRRR....', 'RRR.....'] },
+  { key: 'blackgarlic', name: '黑蒜', color: '#241c30', tier: 3,
+    pal: { K: '#241c30', k: '#54487a' },
+    px: ['...kk...', '..kKKk..', '.kKKKKk.', '.KKKKKK.', '.KKkkKK.', '.KKKKKK.', '..KKKK..', '...KK...'] },
+
+  { key: 'quantumcheese', name: '量子芝士', color: '#7dfcff', tier: 4,
+    pal: { C: '#7dfcff', c: '#2ea8b5' },
+    px: ['........', '......CC', '....CCCC', '..CCcCCC', 'CCCCCCcC', 'CCcCCCCC', 'CCCCCcCC', 'CCCCCCCC'] },
+  { key: 'glowbit', name: '发光碎片', color: '#baffff', tier: 4,
+    pal: { W: '#baffff', w: '#ffffff' },
+    px: ['...W....', '...W....', '.W.W.W..', '..WwW...', 'WWWwWWW.', '..WwW...', '.W.W.W..', '...W....'] },
+  { key: 'stardust', name: '星尘番茄', color: '#ff9ecf', tier: 4,
+    pal: { T: '#ff9ecf', t: '#ffc9e4', s: '#fff0f8' },
+    px: ['.s......', '...TTT..', '..TTTTT.', '.TTtTTT.', '.TTTTTT.', '..TTTT..', '......s.', '........'] },
+  { key: 'goldflake', name: '黄金箔片', color: '#ffd23f', tier: 4,
+    pal: { G: '#ffd23f', g: '#fff0b0' },
+    px: ['...GG...', '..GGGG..', '.GGggGG.', 'GGggggGG', 'GGggggGG', '.GGggGG.', '..GGGG..', '...GG...'] },
+]
+
+export const ING_MAP = {}
+INGREDIENTS.forEach(i => { ING_MAP[i.key] = i })
+
+export const ING_BY_TIER = [0, 1, 2, 3, 4].map(t => INGREDIENTS.filter(i => i.tier === t))
