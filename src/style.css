@@ -21,6 +21,11 @@
 
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
+html{scrollbar-gutter:stable;}
+#app{
+  min-height:100vh;
+  transform-origin:center top;
+}
 body{
   background:var(--bg-deep);
   background-image:
@@ -323,15 +328,15 @@ a{color:var(--cyan);}
   .floater.crit{ animation:floatUp 950ms ease-out forwards; }
 }
 
-#clickCanvas.pizza-punch{ animation:pizzaPunch 220ms ease-out; }
+#clickCanvas.pizza-punch{ animation:pizzaPunch 180ms ease-out; }
 @keyframes pizzaPunch{
   0%{ transform:scale(1); }
-  35%{ transform:scale(0.9,0.92); }
-  70%{ transform:scale(1.05,1.03); }
+  35%{ transform:scale(0.95,0.96); }
+  70%{ transform:scale(1.025,1.018); }
   100%{ transform:scale(1); }
 }
-.stage.click-shake{ animation:stageShake 220ms ease-in-out; }
-.stage.click-shake-big{ animation:stageShakeBig 320ms ease-in-out; }
+.stage.click-shake{ animation:stageShake 160ms ease-in-out; }
+.stage.click-shake-big{ animation:stageShakeBig 230ms ease-in-out; }
 .stage.stage-impact-hit{
   box-shadow:0 0 0 2px rgba(8,217,214,0.2), inset 0 0 24px rgba(8,217,214,0.08);
 }
@@ -358,19 +363,16 @@ a{color:var(--cyan);}
 }
 @keyframes stageShake{
   0%,100%{ transform:translate(0,0); }
-  20%{ transform:translate(-3px,2px); }
-  40%{ transform:translate(3px,-2px); }
-  60%{ transform:translate(-2px,-2px); }
-  80%{ transform:translate(2px,2px); }
+  25%{ transform:translate(-1px,1px); }
+  50%{ transform:translate(1px,-1px); }
+  75%{ transform:translate(-1px,0); }
 }
 @keyframes stageShakeBig{
   0%,100%{ transform:translate(0,0) rotate(0deg); }
-  15%{ transform:translate(-7px,4px) rotate(-1deg); }
-  30%{ transform:translate(6px,-5px) rotate(1deg); }
-  45%{ transform:translate(-6px,-4px) rotate(-1deg); }
-  60%{ transform:translate(6px,4px) rotate(1deg); }
-  75%{ transform:translate(-4px,-3px) rotate(0deg); }
-  90%{ transform:translate(3px,2px) rotate(0deg); }
+  18%{ transform:translate(-3px,2px) rotate(-0.35deg); }
+  36%{ transform:translate(3px,-2px) rotate(0.35deg); }
+  56%{ transform:translate(-2px,-1px) rotate(-0.25deg); }
+  76%{ transform:translate(2px,1px) rotate(0.2deg); }
 }
 @media (prefers-reduced-motion: reduce){
   #clickCanvas.pizza-punch{ animation:none; }
@@ -1030,32 +1032,87 @@ button:not(:disabled):active,
   transition:width 120ms linear;
 }
 
-body.screen-shake-soft{animation:screenShakeSoft 180ms steps(2,end);}
-body.screen-shake-medium{animation:screenShakeMedium 260ms steps(2,end);}
-body.screen-shake-strong{animation:screenShakeStrong 340ms steps(2,end);}
+body.screen-shake-stage::before,
+body.screen-shake-soft::before,
+body.screen-shake-medium::before,
+body.screen-shake-strong::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  pointer-events:none;
+  border:3px solid rgba(8,217,214,0.26);
+  box-shadow:inset 0 0 24px rgba(8,217,214,0.12);
+  opacity:0;
+  transform:translate3d(0,0,0);
+  will-change:transform, opacity;
+}
+body.screen-shake-stage::before{animation:screenPulseStage 140ms steps(2,end);}
+body.screen-shake-soft::before{animation:screenPulseSoft 180ms steps(2,end);}
+body.screen-shake-medium::before{animation:screenPulseMedium 260ms steps(2,end);}
+body.screen-shake-strong::before{
+  border-color:rgba(255,210,63,0.38);
+  box-shadow:inset 0 0 30px rgba(255,210,63,0.16);
+  animation:screenPulseStrong 340ms steps(2,end);
+}
+body.screen-shake-soft #app{animation:screenShakeSoft 180ms steps(2,end);}
+body.screen-shake-medium #app{animation:screenShakeMedium 260ms steps(2,end);}
+body.screen-shake-strong #app{animation:screenShakeStrong 340ms steps(2,end);}
 @keyframes screenShakeSoft{
-  0%,100%{transform:translate(0,0);}
-  30%{transform:translate(-1px,1px);}
-  65%{transform:translate(1px,-1px);}
+  0%,100%{transform:translate3d(0,0,0);}
+  30%{transform:translate3d(-1px,1px,0);}
+  65%{transform:translate3d(1px,-1px,0);}
 }
 @keyframes screenShakeMedium{
-  0%,100%{transform:translate(0,0);}
-  20%{transform:translate(-3px,2px);}
-  45%{transform:translate(3px,-2px);}
-  70%{transform:translate(-2px,-1px);}
+  0%,100%{transform:translate3d(0,0,0);}
+  20%{transform:translate3d(-3px,2px,0);}
+  45%{transform:translate3d(3px,-2px,0);}
+  70%{transform:translate3d(-2px,-1px,0);}
 }
 @keyframes screenShakeStrong{
-  0%,100%{transform:translate(0,0);}
-  15%{transform:translate(-5px,3px);}
-  30%{transform:translate(5px,-3px);}
-  50%{transform:translate(-4px,-2px);}
-  70%{transform:translate(4px,2px);}
-  85%{transform:translate(-2px,1px);}
+  0%,100%{transform:translate3d(0,0,0);}
+  15%{transform:translate3d(-5px,3px,0);}
+  30%{transform:translate3d(5px,-3px,0);}
+  50%{transform:translate3d(-4px,-2px,0);}
+  70%{transform:translate3d(4px,2px,0);}
+  85%{transform:translate3d(-2px,1px,0);}
+}
+@keyframes screenPulseStage{
+  0%{opacity:0; transform:translate3d(0,0,0);}
+  45%{opacity:0.34; transform:translate3d(-1px,0,0);}
+  100%{opacity:0; transform:translate3d(0,0,0);}
+}
+@keyframes screenPulseSoft{
+  0%{opacity:0; transform:translate3d(0,0,0);}
+  35%{opacity:0.55; transform:translate3d(-1px,1px,0);}
+  70%{opacity:0.32; transform:translate3d(1px,-1px,0);}
+  100%{opacity:0; transform:translate3d(0,0,0);}
+}
+@keyframes screenPulseMedium{
+  0%{opacity:0; transform:translate3d(0,0,0);}
+  25%{opacity:0.68; transform:translate3d(-2px,1px,0);}
+  55%{opacity:0.42; transform:translate3d(2px,-1px,0);}
+  100%{opacity:0; transform:translate3d(0,0,0);}
+}
+@keyframes screenPulseStrong{
+  0%{opacity:0; transform:translate3d(0,0,0);}
+  18%{opacity:0.78; transform:translate3d(-3px,2px,0);}
+  42%{opacity:0.55; transform:translate3d(3px,-2px,0);}
+  70%{opacity:0.34; transform:translate3d(-2px,1px,0);}
+  100%{opacity:0; transform:translate3d(0,0,0);}
 }
 @media (prefers-reduced-motion: reduce){
+  body.screen-shake-stage,
   body.screen-shake-soft,
   body.screen-shake-medium,
   body.screen-shake-strong{animation:none;}
+  body.screen-shake-soft #app,
+  body.screen-shake-medium #app,
+  body.screen-shake-strong #app{animation:none;}
+  body.screen-shake-stage::before,
+  body.screen-shake-soft::before,
+  body.screen-shake-medium::before,
+  body.screen-shake-strong::before{display:none;}
   .cook-fill{transition:none;}
 }
 

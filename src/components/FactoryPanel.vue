@@ -156,8 +156,8 @@ function doClick(e) {
   if (isCrit) state.stats.critHits = (state.stats.critHits || 0) + 1
   const pt = clickPointFromEvent(e)
   spawnClickImpact(pt, isCrit)
-  triggerScreenShake(isCrit ? 'medium' : 'soft')
-  if (isCrit) { sfxCrit(); haptic([12, 28, 18]) } else { sfxClick(); haptic([5, 10]) }
+  triggerScreenShake(isCrit ? 'soft' : 'stage')
+  if (isCrit) { sfxCrit(); haptic([8, 18, 10]) } else { sfxClick(); haptic(4) }
   spawnFloater(isCrit ? ('💥 +' + fmt(power)) : ('+' + fmt(power)), isCrit, pt)
   if (state.stats.totalClicks % 30 === 0) rerollClickStagePizza()
   checkUnlocks(state)

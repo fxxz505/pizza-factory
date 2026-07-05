@@ -68,12 +68,12 @@ function playReveal(payload, mode) {
   window.setTimeout(() => {
     isRevealing.value = false
     sfxTier(maxTier)
+    triggerScreenShake(maxTier === 4 ? 'strong' : (maxTier >= 3 || payload.summary.newCount > 0 ? 'medium' : 'soft'))
     if (maxTier >= 3 || payload.summary.newCount > 0) {
       revealFlash.value = false
       requestAnimationFrame(() => { revealFlash.value = true })
       revealShake.value = false
       requestAnimationFrame(() => { revealShake.value = true })
-      triggerScreenShake(maxTier === 4 ? 'strong' : 'medium')
     }
     if (maxTier === 4) haptic([30, 40, 60]); else if (maxTier === 3) haptic(25)
   }, 220 + results.length * perCardDelay)

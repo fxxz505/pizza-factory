@@ -2,6 +2,7 @@ let shakeTimer = null
 let tapCleanupTimer = null
 
 const SHAKE_CLASS = {
+  stage: 'screen-shake-stage',
   soft: 'screen-shake-soft',
   medium: 'screen-shake-medium',
   strong: 'screen-shake-strong',
